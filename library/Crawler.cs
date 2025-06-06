@@ -31,7 +31,7 @@ namespace WebCrawler{
                 {
                     if (!Uri.IsWellFormedUriString(currentUrl, UriKind.Absolute))
                     {
-                        Console.WriteLine($"Err: Malformed URL - {currentUrl}");
+                        Console.WriteLine($"Err: Malformed URL = {currentUrl}");
                         continue;
                     }
 
@@ -60,7 +60,7 @@ namespace WebCrawler{
                                             if (!crawledUrls.ContainsKey(absoluteUrl) && !toCrawl.Contains(absoluteUrl) && crawledUrls.Count < limit) toCrawl.Enqueue(absoluteUrl);
 
                                         }
-                                        catch (UriFormatException err)
+                                        catch (UriFormatException)
                                         {
                                             Console.WriteLine("Err: Uri Format exception");
                                         }
@@ -68,10 +68,18 @@ namespace WebCrawler{
                                 }
 
                             }
+                            else if (responseMessage != null)
+                            {
+                                Console.WriteLine($"Err: Status Code = {responseMessage.StatusCode}");
+                            }
                             else
                             {
-                                Console.WriteLine($"Err: Failed to fetch");
+                                Console.WriteLine("Err: responseMessage is null");
                             }
+                        }
+                        catch (Exception err)
+                        {
+                            Console.WriteLine($"Err: Task failed - {err}");
                         }
 
                         finally

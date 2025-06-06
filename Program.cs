@@ -1,4 +1,6 @@
-﻿class Program
+﻿using WebCrawler;
+
+class Program
 {
     static async Task Main(string[] args)
     {
@@ -6,10 +8,10 @@
         int limit = 20;
 
         var watch = System.Diagnostics.Stopwatch.StartNew();
-        await WebCrawler.Crawler.CrawlAsync(startUrl, limit);
+        await Crawler.CrawlAsync(startUrl, limit);
         watch.Stop();
         Console.WriteLine($"Scan time: {watch.ElapsedMilliseconds}ms");
-        
+
     }
 }
 
