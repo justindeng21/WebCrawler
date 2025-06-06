@@ -4,11 +4,11 @@
     {
         string startUrl = "https://finance.yahoo.com/";
         int limit = 20;
+
         var watch = System.Diagnostics.Stopwatch.StartNew();
-        await WebCrawler.Crawler.Crawl(startUrl, limit);
+        await WebCrawler.Crawler.CrawlAsync(startUrl, limit);
         watch.Stop();
-        var elapsedMs = watch.ElapsedMilliseconds;
-        Console.WriteLine($"Scan time: {elapsedMs}ms");
+        Console.WriteLine($"Scan time: {watch.ElapsedMilliseconds}ms");
         
     }
 }

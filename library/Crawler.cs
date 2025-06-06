@@ -17,7 +17,7 @@ namespace WebCrawler{
     public static class Crawler{
 
         private static int maxConcurrentThreads = 5;
-        public static async Task Crawl(string startingUrl, int limit)
+        public static async Task CrawlAsync(string startingUrl, int limit)
         {
             var toCrawl = new ConcurrentQueue<string>();
             var crawledUrls = new ConcurrentDictionary<string, byte>();
@@ -31,7 +31,7 @@ namespace WebCrawler{
                 {
                     if (!Uri.IsWellFormedUriString(currentUrl, UriKind.Absolute))
                     {
-                        Console.WriteLine($"Malformed URL:{currentUrl}");
+                        Console.WriteLine($"Err: Malformed URL - {currentUrl}");
                         continue;
                     }
 
@@ -62,11 +62,15 @@ namespace WebCrawler{
                                         }
                                         catch (UriFormatException err)
                                         {
-                                            Console.WriteLine(err);
+                                            Console.WriteLine("Err: Uri Format exception");
                                         }
                                     }
                                 }
 
+                            }
+                            else
+                            {
+                                Console.WriteLine($"Err: Failed to fetch");
                             }
                         }
 
