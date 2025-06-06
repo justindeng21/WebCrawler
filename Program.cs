@@ -1,14 +1,19 @@
 ﻿using WebCrawler;
 
-var watch = System.Diagnostics.Stopwatch.StartNew();
-await Crawler.Crawl("https://finance.yahoo.com/", 20);
-watch.Stop();
-var elapsedMs = watch.ElapsedMilliseconds;
-Console.WriteLine($"Scan time: {elapsedMs}ms");
+class Program
+{
+    static async Task Main(string[] args)
+    {
+        string startUrl = "https://finance.yahoo.com/";
+        int limit = 20;
 
+        var watch = System.Diagnostics.Stopwatch.StartNew();
+        await Crawler.CrawlAsync(startUrl, limit);
+        watch.Stop();
+        Console.WriteLine($"Scan time: {watch.ElapsedMilliseconds}ms");
 
-
-
+    }
+}
 
 
 
