@@ -11,6 +11,8 @@ namespace Parser {
             doc.LoadHtml(htmlString);
             return doc.DocumentNode.SelectNodes("//a");
         }
+
+
     }
 
 

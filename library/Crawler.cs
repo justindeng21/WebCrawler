@@ -16,6 +16,9 @@ namespace WebCrawler{
     public static class Crawler{
 
         private static int maxConcurrentThreads = 5;
+        
+        private static int crawledCount = 0;
+
         public static async Task CrawlAsync(string startingUrl, int limit)
         {
             var toCrawl = new ConcurrentQueue<string>();
@@ -24,8 +27,11 @@ namespace WebCrawler{
             var tasks = new List<Task>();
             toCrawl.Enqueue(startingUrl);
 
-            while (crawledUrls.Count < limit)
+            var startingUrlDomain = new Uri(startingUrl).Host;
+
+            while (!toCrawl.IsEmpty || semaphore.CurrentCount < maxConcurrentThreads)
             {
+
                 if (toCrawl.TryDequeue(out var currentUrl))
                 {
                     if (!Uri.IsWellFormedUriString(currentUrl, UriKind.Absolute))
@@ -39,6 +45,13 @@ namespace WebCrawler{
                     {
                         try
                         {
+
+                            int currentCount = Interlocked.Increment(ref crawledCount);
+                            if (currentCount > limit)
+                            {
+                                semaphore.Release();
+                                return;
+                            }
                             var responseMessage = await HtmlFetcher.GetHtml(currentUrl);
                             if (responseMessage != null && responseMessage.IsSuccessStatusCode)
                             {
@@ -46,7 +59,6 @@ namespace WebCrawler{
                                 var anchorTags = HtmlParser.ParseAnchorTags(content);
                                 var uri = new Uri(currentUrl);
                                 crawledUrls.TryAdd(currentUrl, 0);
-                                if (crawledUrls.Count >= limit) return;
                                 if (anchorTags != null)
                                 {
                                     foreach (var node in anchorTags)
@@ -56,7 +68,8 @@ namespace WebCrawler{
                                         try
                                         {
                                             var absoluteUrl = new Uri(uri, href).AbsoluteUri;
-                                            if (!crawledUrls.ContainsKey(absoluteUrl) && !toCrawl.Contains(absoluteUrl) && crawledUrls.Count < limit) toCrawl.Enqueue(absoluteUrl);
+                                            var absoluteUri = new Uri(absoluteUrl);
+                                            if (!crawledUrls.ContainsKey(absoluteUrl) && !toCrawl.Contains(absoluteUrl) && crawledCount < limit && startingUrlDomain == absoluteUri.Host) toCrawl.Enqueue(absoluteUrl);
 
                                         }
                                         catch (UriFormatException)
@@ -85,15 +98,15 @@ namespace WebCrawler{
                         {
                             semaphore.Release();
                         }
-                        
+
                     });
                     tasks.Add(task);
                 }
                 else
                 {
-                    await Task.Delay(50);
+                    await Task.Delay(100);
                 }
-                
+
             }
             await Task.WhenAll(tasks);
             PrintCrawledLinks(crawledUrls.Keys);

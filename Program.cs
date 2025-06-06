@@ -4,8 +4,8 @@ class Program
 {
     static async Task Main(string[] args)
     {
-        string startUrl = "https://finance.yahoo.com/";
-        int limit = 20;
+        string startUrl = "https://finance.yahoo.com";
+        int limit = 200;
         var watch = System.Diagnostics.Stopwatch.StartNew();
         await Crawler.CrawlAsync(startUrl, limit);
         watch.Stop();
