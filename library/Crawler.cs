@@ -49,7 +49,7 @@ namespace WebCrawler{
                                 if (crawledUrls.Count >= limit) return;
                                 if (anchorTags != null)
                                 {
-                                    foreach (HtmlNode node in anchorTags)
+                                    foreach (var node in anchorTags)
                                     {
                                         if (node.Attributes["href"] == null) continue;
                                         var href = node.Attributes["href"].Value;
