@@ -15,3 +15,4 @@ C:\Users\justi\Documents\webcrawler\obj\Debug\net8.0\ref\webcrawler.dll
 C:\Users\justi\Documents\webcrawler\bin\Debug\net8.0\HtmlAgilityPack.dll
 C:\Users\justi\Documents\webcrawler\obj\Debug\net8.0\webcrawler.csproj.AssemblyReference.cache
 C:\Users\justi\Documents\webcrawler\obj\Debug\net8.0\webcrawler.csproj.Up2Date
+C:\Users\justi\Documents\webcrawler\obj\Debug\net8.0\webcrawler.sourcelink.json

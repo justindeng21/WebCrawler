@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using HtmlAgilityPack;
 using Parser;
 
@@ -14,69 +15,85 @@ namespace WebCrawler{
     }
 
     public static class Crawler{
+
+        private static int maxConcurrentThreads = 5;
         public static async Task Crawl(string startingUrl, int limit)
         {
-            var toCrawl = new Queue<string> {};
-            var crawledUrls = new HashSet<string> {};
+            var toCrawl = new ConcurrentQueue<string>();
+            var crawledUrls = new ConcurrentDictionary<string, byte>();
+            var semaphore = new SemaphoreSlim(maxConcurrentThreads);
+            var tasks = new List<Task>();
             toCrawl.Enqueue(startingUrl);
-            
-            while (toCrawl.Count > 0 && crawledUrls.Count < limit)
-            {
-                var currentUrl = toCrawl.Dequeue();
-                if (!Uri.IsWellFormedUriString(currentUrl, UriKind.Absolute))
-                {
-                    Console.WriteLine($"Malformed URL:{currentUrl}");
-                    continue;
-                }
 
-                try
+            while (crawledUrls.Count < limit)
+            {
+                if (toCrawl.TryDequeue(out var currentUrl))
                 {
-                    var responseMessage = await HtmlFetcher.GetHtml(currentUrl);
-                    if (!responseMessage.IsSuccessStatusCode)
+                    if (!Uri.IsWellFormedUriString(currentUrl, UriKind.Absolute))
                     {
-                        Console.WriteLine($"Failed to fetch {currentUrl}\nStatus Code: {responseMessage.StatusCode}");
+                        Console.WriteLine($"Malformed URL:{currentUrl}");
                         continue;
                     }
 
-                    else
+                    await semaphore.WaitAsync();
+                    var task = Task.Run(async () =>
                     {
-                        var content = await responseMessage.Content.ReadAsStringAsync();
-                        var anchorTags = HtmlParser.ParseAnchorTags(content);
-                        crawledUrls.Add(currentUrl);
-                        var uri = new Uri(currentUrl);
-                        if (anchorTags == null) continue;
-                        foreach (HtmlNode node in anchorTags)
+                        try
                         {
-                            var href = node.Attributes["href"].Value;
-                            if (href == null) continue;
-                            try
+                            var responseMessage = await HtmlFetcher.GetHtml(currentUrl);
+                            if (responseMessage != null && responseMessage.IsSuccessStatusCode)
                             {
-                                var absoluteUrl = new Uri(uri, href).AbsoluteUri;
-                                if (!crawledUrls.Contains(absoluteUrl) && !toCrawl.Contains(absoluteUrl)) toCrawl.Enqueue(absoluteUrl);
-                                
-                            }
-                            catch (UriFormatException err)
-                            {
-                                Console.WriteLine(err);
+                                var content = await responseMessage.Content.ReadAsStringAsync();
+                                var anchorTags = HtmlParser.ParseAnchorTags(content);
+                                var uri = new Uri(currentUrl);
+                                crawledUrls.TryAdd(currentUrl, 0);
+                                if (crawledUrls.Count >= limit) return;
+                                if (anchorTags != null)
+                                {
+                                    foreach (HtmlNode node in anchorTags)
+                                    {
+                                        if (node.Attributes["href"] == null) continue;
+                                        var href = node.Attributes["href"].Value;
+                                        try
+                                        {
+                                            var absoluteUrl = new Uri(uri, href).AbsoluteUri;
+                                            if (!crawledUrls.ContainsKey(absoluteUrl) && !toCrawl.Contains(absoluteUrl) && crawledUrls.Count < limit) toCrawl.Enqueue(absoluteUrl);
+
+                                        }
+                                        catch (UriFormatException err)
+                                        {
+                                            Console.WriteLine(err);
+                                        }
+                                    }
+                                }
+
                             }
                         }
-                        
-                    }
-                }
 
-                catch (Exception e)
-                {
-                    Console.WriteLine("Failed to fetch file");
-                    Console.WriteLine(e);
+                        finally
+                        {
+                            semaphore.Release();
+                        }
+                        
+                    });
+                    tasks.Add(task);
                 }
+                else
+                {
+                    await Task.Delay(50);
+                }
+                
             }
-            PrintCrawledLinks(crawledUrls);
+            await Task.WhenAll(tasks);
+            PrintCrawledLinks(crawledUrls.Keys);
         }
 
-        public static void PrintCrawledLinks(HashSet<string> crawledUrls){
+        public static void PrintCrawledLinks(IEnumerable<string> crawledUrls){
+            int count = 1;
             foreach (string url in crawledUrls)
             {
-                Console.WriteLine(url);
+                Console.WriteLine($"{count}:{url}");
+                count += 1;
             }
         }
     }
