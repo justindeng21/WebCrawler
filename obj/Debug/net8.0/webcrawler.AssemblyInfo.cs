@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("webcrawler")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+08266f3f0b2893f67f4bbad6a288fc5a3be2df4f")]
 [assembly: System.Reflection.AssemblyProductAttribute("webcrawler")]
 [assembly: System.Reflection.AssemblyTitleAttribute("webcrawler")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
